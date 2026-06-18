@@ -9,19 +9,40 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route; // Tambahan untuk memanggil API
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
+
+    // --- CUSTOM: GET Register dengan API Kurs ---
+    Route::get('register', function () {
+        try {
+            $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
+            $kurs = $response['rates']['IDR'] ?? 16450;
+        } catch (Exception $e) {
+            $kurs = 16450; // Fallback jika API down/offline
+        }
+
+        return view('auth.register', ['kurs' => $kurs]);
+    })->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
+    // --- CUSTOM: GET Login dengan API Kurs ---
+    Route::get('login', function () {
+        try {
+            $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
+            $kurs = $response['rates']['IDR'] ?? 16450;
+        } catch (Exception $e) {
+            $kurs = 16450; // Fallback jika API down/offline
+        }
+
+        return view('auth.login', ['kurs' => $kurs]);
+    })->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+    // --- Rute Bawaan Laravel Breeze Lainnya ---
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
