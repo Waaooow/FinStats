@@ -9,76 +9,54 @@ use Illuminate\Support\Str;
 
 class GroupController extends Controller
 {
-    /**
-     * MENAMPILKAN HALAMAN UTAMA TABUNGAN BERSAMA
-     */
     public function index()
     {
         $user = auth()->user();
-
-        // Ambil semua grup yang diikuti oleh user yang sedang login
         $groups = $user->groups()->with(['users'])->get();
-
         return view('groups.index', compact('groups'));
     }
 
-    /**
-     * MEMBUAT KELOMPOK TABUNGAN BARU
-     */
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        // Generate token acak unik sepanjang 6 karakter untuk kode join (Contoh: KAS-A7B8)
         $code = 'KAS-'.strtoupper(Str::random(6));
 
-        // 1. Simpan kelompok ke tabel 'groups'
         $group = Group::create([
             'name' => $request->name,
             'code' => $code,
         ]);
 
-        // 2. Otomatis masukkan si pembuat grup sebagai anggota pertama di tabel jembatan 'group_user'
         $group->users()->attach(auth()->id());
 
         return redirect()->back()->with('success', 'Kelompok tabungan berhasil dibuat! Kode Join: '.$code);
     }
 
-    /**
-     * BERGABUNG KE KELOMPOK YANG SUDAH ADA LEWAT KODE JOIN
-     */
     public function join(Request $request)
     {
         $request->validate([
             'code' => 'required|string',
         ]);
 
-        // Cari grup berdasarkan kode token yang dimasukkan
         $group = Group::where('code', strtoupper($request->code))->first();
 
         if (! $group) {
             return redirect()->back()->with('error', 'Kode kelompok tidak ditemukan! Periksa kembali kodenya.');
         }
 
-        // Cek apakah user sudah terdaftar di grup tersebut agar tidak double
         if ($group->users()->where('user_id', auth()->id())->exists()) {
             return redirect()->back()->with('error', 'Kamu sudah bergabung di kelompok ini!');
         }
 
-        // Daftarkan user ke tabel jembatan group_user
         $group->users()->attach(auth()->id());
 
         return redirect()->back()->with('success', 'Berhasil bergabung ke kelompok: '.$group->name);
     }
 
-    /**
-     * MENAMPILKAN RINCIAN TOTAL DANA DAN KONTRIBUSI MEMBER DI DALAM GRUP
-     */
     public function show($id)
     {
-        // Pastikan user adalah anggota dari grup yang mau dia intip
         $group = Group::with('users')->findOrFail($id);
         if (! $group->users->contains(auth()->id())) {
             abort(403, 'Anda bukan anggota kelompok ini.');
@@ -93,8 +71,7 @@ class GroupController extends Controller
         // 3. Saldo Bersih Kas Bersama
         $groupBalance = $totalIncome - $totalOutcome;
 
-        // 4. HITUNG RINCIAN SALDO PER MEMBER (LEADERBOARD)
-        // Kita looping setiap user di grup ini, lalu hitung sum(amount) mereka masing-masing
+        // 4. Hitung rincian saldo per member
         $memberSavings = $group->users->map(function ($user) use ($group) {
             $userIncome = $group->transactions()->where('user_id', $user->id)->where('type', 'income')->sum('amount');
             $userOutcome = $group->transactions()->where('user_id', $user->id)->where('type', 'outcome')->sum('amount');
@@ -103,17 +80,15 @@ class GroupController extends Controller
                 'name' => $user->name,
                 'total' => $userIncome - $userOutcome,
             ];
-        })->sortByDesc('total'); // Urutkan dari yang menabungnya paling banyak
+        })->sortByDesc('total');
 
-        // 5. Riwayat Aktivitas Transaksi di dalam grup ini
+        // 5. Riwayat Aktivitas
         $groupTransactions = $group->transactions()->with('user')->orderBy('date', 'desc')->get();
 
-        return view('groups.show', compact('group', 'groupBalance', 'memberSavings', 'groupTransactions'));
+        // Variabel totalIncome & totalOutcome sudah dipassing ke view!
+        return view('groups.show', compact('group', 'groupBalance', 'totalIncome', 'totalOutcome', 'memberSavings', 'groupTransactions'));
     }
 
-    /**
-     * PROSES SETOR ATAU TARIK UANG DI TABUNGAN BERSAMA
-     */
     public function storeTransaction(Request $request, $groupId)
     {
         $request->validate([
@@ -125,7 +100,7 @@ class GroupController extends Controller
 
         Transaction::create([
             'user_id' => auth()->id(),
-            'group_id' => $groupId, // Dikunci ke ID kelompok ini
+            'group_id' => $groupId,
             'type' => $request->type,
             'amount' => $request->amount,
             'description' => $request->description,

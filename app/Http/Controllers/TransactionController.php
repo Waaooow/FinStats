@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -11,16 +12,18 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 class TransactionController extends Controller
 {
     /**
-     * MENAMPILKAN DASHBOARD UTAMA (TRANSAKSI PRIBADI)
+     * MENAMPILKAN DASHBOARD UTAMA (PRIBADI & DINAMIS GRUP)
      */
     public function index()
     {
         $user = auth()->user();
 
-        // 1. Ambil transaksi pribadi saja (yang tidak gabung grup / group_id = null)
+        // 1. Ambil 7 transaksi pribadi terbaru (untuk tabel dan chart)
+        // Kita tambah orderBy 'id' agar jika ada transaksi di tanggal yg sama, urutannya tetap kronologis
         $transactions = $user->transactions()
             ->whereNull('group_id')
             ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
             ->take(7)
             ->get();
 
@@ -39,14 +42,35 @@ class TransactionController extends Controller
         // 4. Hitung sisa saldo bersih pribadi
         $totalSaldo = $totalPemasukan - $totalPengeluaran;
 
-        // 5. MEMBUAT DATA UNTUK CHART (Tren Saldo Berjalan dari Kiri ke Kanan)
-        // Urutan dibalik: Tanggal lama (kiri) -> Tanggal baru (kanan)
-        $chartTransactions = $transactions->reverse();
+        // =========================================================================
+        // AMBIL DATA TABUNGAN BERSAMA
+        // =========================================================================
+        $kasBersamaList = Group::whereHas('users', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->get();
 
+        // Ambil riwayat gabungan (Personal + Grup) untuk mutasi di dashboard
+        $recentTransactions = Transaction::where(function($query) use ($user) {
+                $query->where('user_id', $user->id)->whereNull('group_id');
+            })
+            ->orWhereIn('group_id', $kasBersamaList->pluck('id'))
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->take(7)
+            ->get();
+        // =========================================================================
+
+        // =========================================================================
+        // 5. DATA UNTUK CHART (Sinkron dengan Transaksi Individu User Kiri ke Kanan)
+        // =========================================================================
+        
+        // Balik 7 transaksi terbaru menjadi urutan Terlama -> Terbaru (Kiri ke Kanan)
+        $chartTransactions = $transactions->reverse();
+        
         $chartLabels = [];
         $chartData = [];
 
-        // Hitung mundur saldo awal sebelum 7 transaksi terakhir ini terjadi
+        // Hitung total perubahan uang khusus pada 7 transaksi ini saja
         $netChangeOfSeven = 0;
         foreach ($chartTransactions as $tx) {
             if ($tx->type == 'income') {
@@ -56,30 +80,35 @@ class TransactionController extends Controller
             }
         }
 
-        // Ini titik start saldo awal pada grafik paling kiri
+        // Tentukan "Saldo Start" tepat sebelum 7 transaksi ini terjadi
         $runningBalance = $totalSaldo - $netChangeOfSeven;
 
-        // Iterasi maju untuk merekam pergerakan akumulasi saldo ke kanan
+        // Looping per transaksi untuk menggambar titik naik/turun di Chart
         foreach ($chartTransactions as $tx) {
+            // Label berupa Tanggal (bisa disesuaikan jika ingin tambah jam)
             $chartLabels[] = Carbon::parse($tx->date)->format('d M');
 
+            // Naik jika Pemasukan, Turun jika Pengeluaran
             if ($tx->type == 'income') {
                 $runningBalance += $tx->amount;
             } else {
                 $runningBalance -= $tx->amount;
             }
 
+            // Simpan posisi titik saldo di transaksi ini
             $chartData[] = (float) $runningBalance;
         }
+        // =========================================================================
 
-        // 6. Oper semua variabel ke view dashboard
         return view('dashboard', compact(
             'transactions',
             'totalPemasukan',
             'totalPengeluaran',
             'totalSaldo',
             'chartLabels',
-            'chartData'
+            'chartData',
+            'kasBersamaList',
+            'recentTransactions'
         ));
     }
 
@@ -97,7 +126,7 @@ class TransactionController extends Controller
 
         Transaction::create([
             'user_id' => auth()->id(),
-            'group_id' => null, // Dipastikan null karena transaksi pribadi
+            'group_id' => null, 
             'type' => $request->type,
             'amount' => $request->amount,
             'description' => $request->description,
@@ -108,51 +137,41 @@ class TransactionController extends Controller
     }
 
     /**
-     * PROSES EKSPOR EXCEL MENGGUNAKAN PHPOFFICE / PHPSPREADSHEET
+     * PROSES EKSPOR EXCEL
      */
     public function export()
     {
         $user = auth()->user();
 
-        // Ambil data transaksi pribadi saja
         $transactions = $user->transactions()
             ->whereNull('group_id')
             ->orderBy('date', 'desc')
             ->get();
 
-        // Inisialisasi Class dari PHPOffice
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        // 1. Membuat Judul Kolom (Header)
         $sheet->setCellValue('A1', 'Tanggal');
         $sheet->setCellValue('B1', 'Keterangan');
         $sheet->setCellValue('C1', 'Tipe');
         $sheet->setCellValue('D1', 'Nominal (Rp)');
 
-        // Desain sedikit header-nya biar tebal (opsional)
         $sheet->getStyle('A1:D1')->getFont()->setBold(true);
 
-        // 2. Memasukkan Data Transaksi looping dari baris ke-2
         $row = 2;
         foreach ($transactions as $tx) {
             $sheet->setCellValue('A'.$row, Carbon::parse($tx->date)->format('d/m/Y'));
             $sheet->setCellValue('B'.$row, $tx->description);
             $sheet->setCellValue('C'.$row, $tx->type == 'income' ? 'Pemasukan' : 'Pengeluaran');
-
-            // Disimpan sebagai angka (numeric) agar bisa di-SUM otomatis di Excel
             $sheet->setCellValue('D'.$row, $tx->amount);
             $sheet->getStyle('D'.$row)->getNumberFormat()->setFormatCode('#,##0');
-
             $row++;
         }
 
-        // Auto-size kolom biar tidak kepotong teksnya
         foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // 3. Proses Download File .xlsx langsung ke Browser
         $fileName = 'Laporan_Transaksi_Pribadi_'.date('Ymd_His').'.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

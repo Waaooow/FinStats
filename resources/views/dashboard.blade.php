@@ -1,150 +1,130 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<div x-data="{ open: false }">
+<div x-data="{ open: false, amount: '' }">
     <x-app-layout>
-        <x-slot name="header">
-            <div class="flex justify-between items-center px-2 sm:px-0">
-                <h2 class="font-bold text-lg sm:text-xl text-gray-800 leading-tight flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-indigo-600"></i>
-                    {{ __('Dashboard Keuangan') }}
-                </h2>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8 pb-12">
+            
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-chart-simple text-emerald-500 text-xl"></i>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-100 tracking-tight">Dashboard Keuangan</h2>
+                </div>
 
-                <button @click="open = true"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-full shadow-md text-xs transition-all duration-200 hover:scale-105 flex items-center gap-1.5">
+                <button @click="open = true" class="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-slate-950 text-xs font-bold rounded-full shadow-sm flex items-center gap-1.5 transition-all duration-200">
                     <i class="fa-solid fa-plus-circle text-sm"></i> Catat Transaksi
                 </button>
             </div>
-        </x-slot>
 
-        <div class="py-6 sm:py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            @if (session('success'))
+                <div class="bg-[#022c22] border border-emerald-800 text-emerald-400 px-4 py-3 rounded-xl text-sm flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
 
-                @if (session('success'))
-                    <div
-                        class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-circle-check text-green-500"></i>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
-
-                <div
-                    class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-lg overflow-hidden group relative">
-                    <div
-                        class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition duration-500">
-                    </div>
-
-                    <div class="p-6 sm:p-8 text-left relative z-10 border-b border-white/10">
-                        <p
-                            class="text-[10px] sm:text-xs uppercase font-extrabold text-indigo-100 tracking-wider flex items-center justify-start gap-1.5">
-                            <i class="fa-solid fa-wallet text-indigo-200"></i> Total Saldo Tabungan
-                        </p>
-                        <p class="text-3xl sm:text-5xl font-black mt-2 drop-shadow-sm tracking-tight text-left">
+            <div class="grid grid-cols-1 {{ $kasBersamaList->count() > 0 ? 'lg:grid-cols-2' : 'grid-cols-1' }} gap-6">
+                <div class="bg-[#022c22] rounded-2xl border border-emerald-900/60 p-6 sm:p-8 relative overflow-hidden group">
+                    <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                    <div class="relative z-10 space-y-4">
+                        <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-950/50 border border-emerald-800/50 px-2.5 py-1 rounded-md">
+                            TOTAL SALDO TABUNGAN
+                        </span>
+                        <div class="text-4xl sm:text-5xl font-black text-white tracking-tight">
                             Rp {{ number_format($totalSaldo ?? 0, 0, ',', '.') }}
-                        </p>
-                    </div>
-
-                    <div
-                        class="grid grid-cols-2 bg-slate-900/40 backdrop-blur-xs text-left text-xs divide-x divide-white/10 relative z-10">
-                        <div class="py-4 px-5 hover:bg-white/5 transition duration-200 text-left">
-                            <p
-                                class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-emerald-400 flex items-center justify-start gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                                Pemasukan
-                            </p>
-                            <p class="text-sm sm:text-lg font-black mt-1 text-emerald-300">
-                                Rp {{ number_format($totalPemasukan ?? 0, 0, ',', '.') }}
-                            </p>
                         </div>
-                        <div class="py-4 px-5 hover:bg-white/5 transition duration-200 text-left">
-                            <p
-                                class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-rose-400 flex items-center justify-start gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span> Pengeluaran
-                            </p>
-                            <p class="text-sm sm:text-lg font-black mt-1 text-rose-300">
-                                Rp {{ number_format($totalPengeluaran ?? 0, 0, ',', '.') }}
-                            </p>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-800/50 mt-6">
+                            <div class="bg-[#064e3b]/30 p-3.5 rounded-xl border border-emerald-800/30">
+                                <p class="text-[11px] text-emerald-500 font-semibold mb-1">Pemasukan</p>
+                                <p class="text-base font-bold text-white">Rp {{ number_format($totalPemasukan ?? 0, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="bg-[#064e3b]/30 p-3.5 rounded-xl border border-emerald-800/30">
+                                <p class="text-[11px] text-emerald-500 font-semibold mb-1">Pengeluaran</p>
+                                <p class="text-base font-bold text-white">Rp {{ number_format($totalPengeluaran ?? 0, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                    <div class="flex items-center gap-2">
-                        <div
-                            class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-chart-line"></i>
+                @foreach($kasBersamaList as $kas)
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 sm:p-8 relative overflow-hidden flex flex-col justify-between group">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
+                                TABUNGAN BERSAMA
+                            </span>
+                            <span class="text-xs text-slate-400 font-semibold bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                                {{ $kas->name ?? $kas->nama_tabungan }}
+                            </span>
                         </div>
-                        <h3 class="text-sm sm:text-base font-bold text-gray-800">Tren Keuangan (7 Transaksi Terakhir)
-                        </h3>
+                        <div class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            Rp {{ number_format($kas->transactions()->where('type', 'income')->sum('amount') - $kas->transactions()->where('type', 'outcome')->sum('amount'), 0, ',', '.') }}
+                        </div>
                     </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span class="text-slate-500">Grup Aktif</span>
+                        <a href="{{ route('groups.show', $kas->id) }}" class="text-emerald-500 hover:text-emerald-400 font-bold flex items-center gap-1 transition-colors">
+                            Lihat Detail <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
 
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-emerald-500 text-sm"></i>
+                        <h3 class="text-sm sm:text-base font-bold text-slate-200">Tren Keuangan <span class="text-xs text-slate-500 font-normal">(7 Transaksi Terakhir)</span></h3>
+                    </div>
                     <div class="w-full overflow-x-auto">
-                        <div class="min-w-[600px] h-64 sm:h-80">
+                        <div class="min-w-[500px] h-64 sm:h-80">
                             <canvas id="pribadiChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="flex items-center gap-2">
-                            <div
-                                class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-receipt"></i>
-                            </div>
+                            <i class="fa-solid fa-receipt text-emerald-500 text-sm"></i>
                             <div>
-                                <h3 class="text-sm sm:text-base font-bold text-gray-800">Riwayat Mutasi</h3>
-                                <p class="text-[10px] sm:text-xs text-gray-400">Daftar keluar masuknya uang pribadi kamu
-                                </p>
+                                <h3 class="text-sm font-bold text-slate-200">Riwayat Mutasi</h3>
+                                <p class="text-[10px] text-slate-500">Daftar keluar masuk uang pribadi kamu</p>
                             </div>
                         </div>
-
                         @if (isset($transactions) && $transactions->count() > 0)
-                            <a href="{{ route('transactions.export') }}"
-                                class="inline-flex items-center justify-center gap-1.5 bg-gray-50 border border-gray-200 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition px-3 py-1.5 rounded-xl text-xs font-semibold self-start sm:self-center">
-                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Eksport (.xlsx)
+                            <a href="{{ route('transactions.export') }}" class="inline-flex items-center justify-center gap-1.5 bg-slate-950 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition px-3 py-1.5 rounded-lg text-[10px] font-bold self-start sm:self-center">
+                                <i class="fa-solid fa-file-excel text-emerald-500"></i> Ekspor (.xlsx)
                             </a>
                         @endif
                     </div>
 
-                    <div class="overflow-x-auto rounded-xl border border-gray-100">
-                        <table class="min-w-full divide-y divide-gray-100 text-xs">
+                    <div class="overflow-x-auto rounded-xl border border-slate-800">
+                        <table class="min-w-full divide-y divide-slate-800 text-xs text-left bg-slate-950/50">
                             <thead>
-                                <tr
-                                    class="text-left font-bold text-gray-500 bg-gray-50/70 uppercase tracking-wider text-[10px]">
-                                    <th class="px-4 py-3">Tanggal</th>
-                                    <th class="px-4 py-3">Keterangan</th>
-                                    <th class="px-4 py-3">Tipe</th>
-                                    <th class="px-4 py-3 text-right">Jumlah</th>
+                                <tr class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">
+                                    <th class="px-4 py-3.5">Tanggal</th>
+                                    <th class="px-4 py-3.5">Keterangan</th>
+                                    <th class="px-4 py-3.5 text-right">Jumlah</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100 bg-white">
+                            <tbody class="divide-y divide-slate-800/80">
                                 @forelse($transactions ?? [] as $tx)
-                                    <tr class="hover:bg-gray-50/50 transition duration-150">
-                                        <td class="px-4 py-3.5 whitespace-nowrap font-semibold text-gray-700">
+                                    <tr class="hover:bg-slate-800/30 transition duration-150">
+                                        <td class="px-4 py-4 whitespace-nowrap font-medium text-slate-300">
                                             {{ \Carbon\Carbon::parse($tx->date)->format('d M Y') }}
                                         </td>
-                                        <td class="px-4 py-3.5 font-medium text-gray-800 max-w-xs truncate">
+                                        <td class="px-4 py-4 font-medium text-slate-400 max-w-xs truncate">
                                             {{ $tx->description }}
                                         </td>
-                                        <td class="px-4 py-3.5 whitespace-nowrap font-bold">
-                                            <span
-                                                class="px-2.5 py-1 rounded-full text-[10px] {{ $tx->type == 'income' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
-                                                {{ $tx->type == 'income' ? 'Pemasukan' : 'Pengeluaran' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3.5 whitespace-nowrap font-black text-right text-sm">
-                                            <span
-                                                class="{{ $tx->type == 'income' ? 'text-emerald-600' : 'text-rose-600' }}">
-                                                {{ $tx->type == 'income' ? '+' : '-' }} Rp
-                                                {{ number_format($tx->amount, 0, ',', '.') }}
+                                        <td class="px-4 py-4 whitespace-nowrap font-bold text-right text-sm">
+                                            <span class="{{ $tx->type == 'income' ? 'text-emerald-500' : 'text-rose-500' }}">
+                                                {{ $tx->type == 'income' ? '+' : '-' }} Rp {{ number_format($tx->amount, 0, ',', '.') }}
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-12 text-center text-gray-400 font-medium">
-                                            <i class="fa-solid fa-folder-open text-2xl block mb-2 text-gray-300"></i>
-                                            Belum ada catatan transaksi keuangan pribadi.
+                                        <td colspan="3" class="px-4 py-10 text-center text-slate-500 font-medium">
+                                            Belum ada catatan transaksi pribadi.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -152,57 +132,57 @@
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <div x-show="open"
-            class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            style="display: none;" x-transition>
-            <div @click.outside="open = false"
-                class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 transform transition-all">
-                <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-money-bill-transfer text-indigo-600"></i> Catat Transaksi Keuangan
+        <div x-show="open" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" style="display: none;" x-transition>
+            <div @click.outside="open = false" class="bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-800 transform transition-all">
+                <div class="px-5 py-4 bg-slate-950/60 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-money-bill-transfer text-emerald-500"></i> Catat Transaksi Keuangan
                     </h3>
-                    <button @click="open = false" class="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                    <button @click="open = false" class="text-slate-500 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <form action="{{ route('transactions.store') }}" method="POST" class="p-5 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Jenis Transaksi</label>
-                        <select name="type"
-                            class="block w-full rounded-xl border-gray-300 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Jenis Transaksi</label>
+                        <select name="type" class="block w-full rounded-xl bg-slate-950 border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:ring-0">
                             <option value="income">🟢 Pemasukan (Uang Masuk)</option>
                             <option value="outcome">🔴 Pengeluaran (Uang Keluar)</option>
                         </select>
                     </div>
+                    
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Jumlah Nominal (Rp)</label>
-                        <input type="number" name="amount" min="1" required placeholder="Contoh: 50000"
-                            class="block w-full rounded-xl border-gray-300 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Jumlah Nominal (Rp)</label>
+                        <input type="number" name="amount" x-model="amount" min="1" required placeholder="Contoh: 50000" class="block w-full rounded-xl bg-slate-950 border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:ring-0 placeholder-slate-700">
+                        
+                        <div class="mt-2.5 grid grid-cols-4 gap-2">
+                            <button type="button" @click="amount = 10000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">10.000</button>
+                            <button type="button" @click="amount = 20000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">20.000</button>
+                            <button type="button" @click="amount = 50000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">50.000</button>
+                            <button type="button" @click="amount = 100000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">100.000</button>
+                            <button type="button" @click="amount = 200000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">200.000</button>
+                            <button type="button" @click="amount = 500000" class="py-1.5 bg-slate-950/80 border border-slate-800 hover:border-emerald-500 hover:text-emerald-400 text-slate-400 rounded-lg text-[10px] font-bold transition-colors">500.000</button>
+                            <button type="button" @click="amount = 1000000" class="col-span-2 py-1.5 bg-emerald-900/20 border border-emerald-900/50 hover:bg-emerald-900/40 hover:border-emerald-500 text-emerald-500 rounded-lg text-[10px] font-bold transition-colors">1 Juta</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Keterangan</label>
+                        <input type="text" name="description" required placeholder="Contoh: Gaji bulanan, beli kopi" class="block w-full rounded-xl bg-slate-950 border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:ring-0 placeholder-slate-700">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Keterangan</label>
-                        <input type="text" name="description" required placeholder="Contoh: Gaji bulanan, beli kopi"
-                            class="block w-full rounded-xl border-gray-300 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Tanggal</label>
+                        <input type="date" name="date" value="{{ date('Y-m-d') }}" required class="block w-full rounded-xl bg-slate-950 border-slate-800 text-slate-200 text-xs focus:border-emerald-500 focus:ring-0">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Tanggal</label>
-                        <input type="date" name="date" value="{{ date('Y-m-d') }}" required
-                            class="block w-full rounded-xl border-gray-300 text-xs focus:border-indigo-500 focus:ring-indigo-500">
-                    </div>
-                    <div class="pt-3 border-t border-gray-100 flex justify-end gap-2">
-                        <button type="button" @click="open = false"
-                            class="px-3 py-1.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">Batal</button>
-                        <button type="submit"
-                            class="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-xs font-bold shadow-md transition hover:from-indigo-700 hover:to-purple-700">Simpan
-                            Catatan</button>
+                    <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                        <button type="button" @click="open = false" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-[#10b981] hover:bg-[#059669] text-slate-950 rounded-xl text-xs font-bold shadow-md transition">Simpan Catatan</button>
                     </div>
                 </form>
             </div>
         </div>
-
     </x-app-layout>
 </div>
 
@@ -210,8 +190,6 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const ctx = document.getElementById('pribadiChart').getContext('2d');
-
-        // Membaca data json dari controller laravel
         const labelsData = {!! json_encode($chartLabels ?? []) !!};
         const valuesData = {!! json_encode($chartData ?? []) !!};
 
@@ -222,35 +200,22 @@
                 datasets: [{
                     label: 'Aktivitas Finansial (Rp)',
                     data: valuesData,
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.04)',
                     borderWidth: 3,
-                    tension: 0.35,
+                    tension: 0.38,
                     fill: true,
-                    pointBackgroundColor: '#4f46e5',
+                    pointBackgroundColor: '#10b981',
                     pointHoverRadius: 6
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false // Mematikan legend box atas biar clean
-                    }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.04)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.03)' }, ticks: { color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
                 }
             }
         });

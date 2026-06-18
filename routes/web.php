@@ -5,46 +5,37 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman awal saat web pertama kali dibuka
+// Halaman Landing Page Utama
 Route::get('/', function () {
-    return redirect()->route('login');
+    return view('welcome');
 });
 
-// Rute Dashboard Keuangan kita (Mengambil data lewat Controller)
-Route::get('/dashboard', [TransactionController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// Fitur Utama (Harus Login & Terverifikasi)
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // Dashboard Keuangan Utama
+    Route::get('/dashboard', [TransactionController::class, 'index'])->name('dashboard');
 
-// Rute untuk memproses input transaksi baru
-Route::post('/transactions', [TransactionController::class, 'store'])
-    ->middleware(['auth'])
-    ->name('transactions.store');
+    // Transaksi Personal
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
 
-// Rute manajemen Profile bawaan Laravel Breeze
+    // Sistem Tabungan Bersama (Kelompok)
+    Route::prefix('group-savings')->name('groups.')->group(function () {
+        Route::get('/', [GroupController::class, 'index'])->name('index'); 
+        Route::post('/', [GroupController::class, 'store'])->name('store');
+        Route::post('/join', [GroupController::class, 'join'])->name('join');
+        Route::get('/{id}', [GroupController::class, 'show'])->name('show');
+        Route::post('/{id}/transaction', [GroupController::class, 'storeTransaction'])->name('transaction.store');
+    });
+});
+
+// Manajemen Profil (Harus Login)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/transactions/export', [TransactionController::class, 'export'])
-    ->middleware(['auth'])
-    ->name('transactions.export');
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Route Utama Transaksi Personal kamu yang sudah ada...
-    Route::get('/dashboard', [TransactionController::class, 'index'])->name('dashboard');
-
-    // =========================================================================
-    // JALUR ROUTE BARU: SISTEM TABUNGAN BERSAMA (KELOMPOK)
-    // =========================================================================
-    Route::get('/group-savings', [GroupController::class, 'index'])->name('groups.index');
-    Route::post('/group-savings', [GroupController::class, 'store'])->name('groups.store');
-    Route::post('/group-savings/join', [GroupController::class, 'join'])->name('groups.join');
-    Route::get('/group-savings/{id}', [GroupController::class, 'show'])->name('groups.show');
-    Route::post('/group-savings/{id}/transaction', [GroupController::class, 'storeTransaction'])->name('groups.transaction.store');
-});
-
-// PENTING: Baris ini bertugas memuat rute Login, Register, dan Log Out milik Breeze.
-// Jangan sampai baris ini hilang dari paling bawah file!
+// Breeze Auth Routes (Login, Register, Logout)
 require __DIR__.'/auth.php';
