@@ -18,13 +18,18 @@ class TransactionController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Ambil 7 transaksi pribadi terbaru (untuk tabel dan chart)
-        // Kita tambah orderBy 'id' agar jika ada transaksi di tanggal yg sama, urutannya tetap kronologis
-        $transactions = $user->transactions()
+        // 1a. Ambil 7 transaksi pribadi terbaru KHUSUS UNTUK CHART (agar grafik tidak kepanjangan)
+        $latestForChart = $user->transactions()
             ->whereNull('group_id')
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->take(7)
+            ->get();
+
+        // 1b. Ambil SEMUA transaksi pribadi KHUSUS UNTUK TABEL (Biar bisa di-scroll)
+        $transactions = $user->transactions()
+            ->whereNull('group_id')
+            ->orderBy('created_at', 'desc') // Urut berdasarkan created_at agar jam/menit urut akurat
             ->get();
 
         // 2. Hitung total pemasukan pribadi
@@ -45,14 +50,14 @@ class TransactionController extends Controller
         // =========================================================================
         // AMBIL DATA TABUNGAN BERSAMA
         // =========================================================================
-        $kasBersamaList = Group::whereHas('users', function($query) use ($user) {
+        $kasBersamaList = Group::whereHas('users', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })->get();
 
-        // Ambil riwayat gabungan (Personal + Grup) untuk mutasi di dashboard
-        $recentTransactions = Transaction::where(function($query) use ($user) {
-                $query->where('user_id', $user->id)->whereNull('group_id');
-            })
+        // Ambil riwayat gabungan (Personal + Grup)
+        $recentTransactions = Transaction::where(function ($query) use ($user) {
+            $query->where('user_id', $user->id)->whereNull('group_id');
+        })
             ->orWhereIn('group_id', $kasBersamaList->pluck('id'))
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
@@ -61,12 +66,12 @@ class TransactionController extends Controller
         // =========================================================================
 
         // =========================================================================
-        // 5. DATA UNTUK CHART (Sinkron dengan Transaksi Individu User Kiri ke Kanan)
+        // 5. DATA UNTUK CHART (Sinkron Kiri ke Kanan)
         // =========================================================================
-        
+
         // Balik 7 transaksi terbaru menjadi urutan Terlama -> Terbaru (Kiri ke Kanan)
-        $chartTransactions = $transactions->reverse();
-        
+        $chartTransactions = $latestForChart->reverse();
+
         $chartLabels = [];
         $chartData = [];
 
@@ -85,17 +90,14 @@ class TransactionController extends Controller
 
         // Looping per transaksi untuk menggambar titik naik/turun di Chart
         foreach ($chartTransactions as $tx) {
-            // Label berupa Tanggal (bisa disesuaikan jika ingin tambah jam)
             $chartLabels[] = Carbon::parse($tx->date)->format('d M');
 
-            // Naik jika Pemasukan, Turun jika Pengeluaran
             if ($tx->type == 'income') {
                 $runningBalance += $tx->amount;
             } else {
                 $runningBalance -= $tx->amount;
             }
 
-            // Simpan posisi titik saldo di transaksi ini
             $chartData[] = (float) $runningBalance;
         }
         // =========================================================================
@@ -126,7 +128,7 @@ class TransactionController extends Controller
 
         Transaction::create([
             'user_id' => auth()->id(),
-            'group_id' => null, 
+            'group_id' => null,
             'type' => $request->type,
             'amount' => $request->amount,
             'description' => $request->description,
@@ -134,6 +136,50 @@ class TransactionController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Transaksi pribadi berhasil dicatat!');
+    }
+
+    /**
+     * PROSES EDIT/UPDATE TRANSAKSI (Pribadi & Grup)
+     */
+    public function update(Request $request, $id)
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        if ($transaction->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit transaksi ini.');
+        }
+
+        $request->validate([
+            'type' => 'required|in:income,outcome',
+            'amount' => 'required|numeric|min:1',
+            'description' => 'required|string|max:255',
+            'date' => 'required|date',
+        ]);
+
+        $transaction->update([
+            'type' => $request->type,
+            'amount' => $request->amount,
+            'description' => $request->description,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->back()->with('success', 'Transaksi berhasil diperbarui!');
+    }
+
+    /**
+     * PROSES HAPUS TRANSAKSI (Pribadi & Grup)
+     */
+    public function destroy($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+
+        if ($transaction->user_id !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus transaksi ini.');
+        }
+
+        $transaction->delete();
+
+        return redirect()->back()->with('success', 'Transaksi berhasil dihapus! Saldo otomatis disesuaikan.');
     }
 
     /**

@@ -12,7 +12,7 @@ Route::get('/', function () {
 
 // Fitur Utama (Harus Login & Terverifikasi)
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard Keuangan Utama
     Route::get('/dashboard', [TransactionController::class, 'index'])->name('dashboard');
 
@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Sistem Tabungan Bersama (Kelompok)
     Route::prefix('group-savings')->name('groups.')->group(function () {
-        Route::get('/', [GroupController::class, 'index'])->name('index'); 
+        Route::get('/', [GroupController::class, 'index'])->name('index');
         Route::post('/', [GroupController::class, 'store'])->name('store');
         Route::post('/join', [GroupController::class, 'join'])->name('join');
         Route::get('/{id}', [GroupController::class, 'show'])->name('show');
@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+// EDIT OR DELETE TRANSACTION
+Route::put('/transactions/{id}', [TransactionController::class, 'update'])->name('transactions.update');
+Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 
 // Breeze Auth Routes (Login, Register, Logout)
 require __DIR__.'/auth.php';
