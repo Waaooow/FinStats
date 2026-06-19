@@ -1,14 +1,14 @@
-<div x-data="{
-    open: false,
-    amount: '',
-    editOpen: false,
-    editId: '',
-    editType: 'income',
-    editAmount: '',
-    editDesc: '',
-    editDate: ''
-}">
-    <x-app-layout>
+<x-app-layout>
+    <div x-data="{
+        open: false,
+        amount: '',
+        editOpen: false,
+        editId: '',
+        editType: 'income',
+        editAmount: '',
+        editDesc: '',
+        editDate: ''
+    }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 space-y-6 pb-12">
 
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -343,16 +343,15 @@
                         <input type="date" name="date" x-model="editDate" required
                             class="block w-full rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:border-emerald-500 focus:ring-0">
                     </div>
-                    <div class="pt-3 flex justify-end gap-2">
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
                         <button type="button" @click="editOpen = false"
                             class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold transition">Batal</button>
                         <button type="submit"
-                            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition">Simpan
+                            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white dark:text-slate-950 rounded-xl text-xs font-bold shadow-md transition">Simpan
                             Perubahan</button>
                     </div>
                 </form>
             </div>
         </div>
-
-    </x-app-layout>
-</div>
+    </div>
+</x-app-layout>

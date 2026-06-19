@@ -6,14 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>FinStats — Dashboard Keuangan</title>
+    <title>{{ config('app.name', 'FinStats') }}</title>
 
+    <!-- INLINE SVG FAVICON -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%2310b981' d='M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-384c70.7 0 128 57.3 128 128H256V128z'/></svg>"
+        type="image/svg+xml">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- SCRIPT DETEKSI TEMA (Penting agar Dark Mode tidak hilang saat pindah halaman) -->
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia(
                 '(prefers-color-scheme: dark)').matches)) {
@@ -23,27 +31,32 @@
         }
     </script>
 
+    <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body
-    class="font-sans antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-300">
+<body class="font-sans antialiased text-slate-900 dark:text-slate-100">
 
-    @include('layouts.navigation')
+    <!-- BACKGROUND UTAMA: Harus ada dark:bg-slate-950 agar warna layar luar berubah -->
+    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
-    @if (isset($header))
-        <header
-            class="bg-white/60 dark:bg-slate-900/30 border-b border-slate-200 dark:border-slate-900/80 backdrop-blur-md transition-colors duration-300">
-            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-                {{ $header }}
-            </div>
-        </header>
-    @endif
+        <!-- Navbar -->
+        @include('layouts.navigation')
 
-    <main>
-        {{ $slot }}
-    </main>
+        <!-- Page Heading -->
+        @isset($header)
+            <header class="bg-white dark:bg-slate-900 shadow dark:shadow-slate-800/50 transition-colors duration-300">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    {{ $header }}
+                </div>
+            </header>
+        @endisset
 
+        <!-- Page Content -->
+        <main>
+            {{ $slot }}
+        </main>
+    </div>
 </body>
 
 </html>

@@ -1,14 +1,14 @@
-<div x-data="{
-    open: false,
-    amount: '',
-    editOpen: false,
-    editId: '',
-    editType: 'income',
-    editAmount: '',
-    editDesc: '',
-    editDate: ''
-}">
-    <x-app-layout>
+<x-app-layout>
+    <div x-data="{
+        open: false,
+        amount: '',
+        editOpen: false,
+        editId: '',
+        editType: 'income',
+        editAmount: '',
+        editDesc: '',
+        editDate: ''
+    }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8 pb-12">
 
             <div class="flex justify-between items-center">
@@ -115,7 +115,8 @@
                         <i class="fa-solid fa-chart-line text-emerald-500 text-sm"></i>
                         <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">Tren Keuangan
                             <span class="text-xs text-slate-400 dark:text-slate-500 font-normal">(7 Transaksi
-                                Terakhir)</span></h3>
+                                Terakhir)</span>
+                        </h3>
                     </div>
                     <div class="w-full overflow-x-auto">
                         <div class="min-w-[500px] h-64 sm:h-[350px]">
@@ -367,8 +368,8 @@
                 </form>
             </div>
         </div>
-    </x-app-layout>
-</div>
+    </div>
+</x-app-layout>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -377,7 +378,6 @@
         const labelsData = {!! json_encode($chartLabels ?? []) !!};
         const valuesData = {!! json_encode($chartData ?? []) !!};
 
-        // Memeriksa apakah halaman menggunakan mode gelap aktif atau tidak
         const isDarkMode = document.documentElement.classList.contains('dark');
 
         new Chart(ctx, {
