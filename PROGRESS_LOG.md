@@ -38,6 +38,12 @@ Catatan setiap perkembangan, perubahan, dan fitur baru pada proyek FinStats.
 - [FIX] `routes/auth.php` — cache kurs USD→IDR via `Cache::remember('kurs_usd_idr', 3600)` (register & login)
 - [FIX] Soft deletes pada tabel `transactions` (migration baru + `SoftDeletes` trait pada model Transaction)
 
+## 2026-10-29 | [UI/UX] | Dashboard pocket clickable
+- Card saldo utama pocket di dashboard sekarang bisa diklik → buka halaman pockets/index
+- Setiap card pocket (nama + saldo) di dashboard sekarang bisa diklik → buka detail pocket (pockets/show)
+- Cursor pointer + hover effect ditambahkan pada card pocket untuk indikator interaktif
+- Link "Kelola Semua Pocket" tetap tersedia sebagai navigasi tambahan
+
 ## 2026-10-29 | [FEATURE] | Implementasi Fitur Pocket (Batch 1)
 - Migration: tabel `pockets` (user_id, name, target nullable, balance, timestamps)
 - Migration: tabel `pocket_transactions` (pocket_id, type enum top_up/withdraw/transfer_in/transfer_out, amount, description, transaction_date, related_pocket_id nullable, related_group_id nullable)

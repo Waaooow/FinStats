@@ -221,8 +221,9 @@
 
         <!-- Pocket Section (Requirement 5) -->
         @if ($userPockets && $userPockets->count() > 0)
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 sm:p-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer"
+                 onclick="window.location.href='{{ route('pockets.index') }}';">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 sm:p-6 hover:bg-slate-50 dark:hover:bg-slate-950/30 transition-colors">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-wallet text-emerald-500 text-sm"></i>
                         <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Pocket Tabungan Pribadi</h3>
@@ -235,7 +236,8 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 sm:p-6">
                     @foreach($userPockets as $pocket)
-                        <div class="bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                        <div class="bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-800 transition-colors"
+                             onclick="window.location.href='{{ route('pockets.show', $pocket->id) }}';">
                             <div class="flex justify-between items-start mb-3">
                                 <div>
                                     <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $pocket->name }}</h4>

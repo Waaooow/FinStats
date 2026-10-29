@@ -205,7 +205,7 @@ Catatan: Berkas ini adalah snapshot konteks proyek FinStats untuk dilanjutkan di
 - `resources/views/pockets/create.blade.php` — form buat pocket
 - `resources/views/pockets/show.blade.php` — detail pocket, mutasi, modal top-up/withdraw/transfer
 - `resources/views/pockets/edit.blade.php` — form edit pocket
-- `resources/views/dashboard.blade.php` — ditambahkan section Pocket Tabungan Pribadi + Mutasi Pocket Terbaru
+- `resources/views/dashboard.blade.php` — ditambahkan section Pocket Tabungan Pribadi + Mutasi Pocket Terbaru; **card saldo utama & setiap card pocket kini bisa diklik (cursor-pointer, onclick) untuk membuka halaman pocket**
 
 ### Requirement Terpenuhi
 1. ✅ Multiple pocket dengan nama bebas ditentukan user
@@ -213,6 +213,7 @@ Catatan: Berkas ini adalah snapshot konteks proyek FinStats untuk dilanjutkan di
 3. ✅ Transfer uang antar pocket + ke tabungan bersama, dengan mutasi wajib untuk setiap pocket terlibat
 4. ✅ Riwayat per pocket terpisah dari transaksi harian (tabel `pocket_transactions` terpisah dari `transactions`); top_up/withdraw juga dicatat di `transactions` harian
 5. ✅ Transfer dari pocket pribadi ke tabungan bersama (grup); dashboard menampilkan mutasi pribadi dan grup
+6. ✅ Dashboard: card saldo utama & setiap card pocket bisa diklik untuk membuka detail/operasi pocket
 
 ## 8. Langkah Selanjutnya (Next Steps)
 
