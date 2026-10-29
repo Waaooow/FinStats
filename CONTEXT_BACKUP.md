@@ -170,13 +170,19 @@ Catatan: Berkas ini adalah snapshot konteks proyek FinStats untuk dilanjutkan di
 
 ---
 
-## 6. Langkah Selanjutnya (Next Steps)
+## 6. Status Git & Branch
 
-1. **Perbaiki bug audit** (prioritas tinggi): cek keanggotaan grup pada `storeTransaction`, pisahkan otorisasi pemilik vs anggota grup, atasi N+1 query.
+- Remote: `git@github.com:Waaooow/FinStats.git` (SSH)
+- Branch utama: `main` (sudah push commit 127e455)
+- Branch aktif saat ini: `pocket-feature` (dibuat dari `main`, belum di-push)
+- Commit terbaru: `fix: perbaikan hasil audit FinStats (batch 1-5)`
+
+## 7. Langkah Selanjutnya (Next Steps)
+
+1. **Tambah fitur Pocket** pada branch `pocket-feature`: konsep tabungan pribadi (pocket/saku) untuk pengguna, terpisah dari transaksi harian dan tabungan bersama.
 2. **Tambah fitur**: kategori transaksi, budget/target, pagination, export laporan bulanan.
 3. **Tambah test**: FeatureTest untuk transaksi pribadi dan grup.
-4. **Hapus file duplikat** `./dashboard.blade.php` di root.
-5. **Perbarui `.env`**: `APP_NAME=FinStats`, `APP_URL` sesuai domain produksi.
+4. **Perbarui `.env`**: `APP_URL` sesuai domain produksi.
 
 ---
 
