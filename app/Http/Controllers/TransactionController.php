@@ -26,19 +26,19 @@ class TransactionController extends Controller
             ->take(7)
             ->get();
 
-        // 1b. Ambil SEMUA transaksi pribadi KHUSUS UNTUK TABEL (Biar bisa di-scroll)
+        // 1b. Ambil transaksi pribadi dengan pagination untuk tabel
         $transactions = $user->transactions()
             ->whereNull('group_id')
             ->orderBy('created_at', 'desc') // Urut berdasarkan created_at agar jam/menit urut akurat
-            ->get();
+            ->paginate(15);
 
-        // 2. Hitung total pemasukan pribadi
+        // 2. Hitung total pemasukan pribadi (query agregat, tidak load semua model)
         $totalPemasukan = $user->transactions()
             ->whereNull('group_id')
             ->where('type', 'income')
             ->sum('amount');
 
-        // 3. Hitung total pengeluaran pribadi
+        // 3. Hitung total pengeluaran pribadi (query agregat)
         $totalPengeluaran = $user->transactions()
             ->whereNull('group_id')
             ->where('type', 'outcome')
@@ -48,11 +48,17 @@ class TransactionController extends Controller
         $totalSaldo = $totalPemasukan - $totalPengeluaran;
 
         // =========================================================================
-        // AMBIL DATA TABUNGAN BERSAMA
+        // AMBIL DATA TABUNGAN BERSAMA (eager load transactions untuk mencegah N+1)
         // =========================================================================
         $kasBersamaList = Group::whereHas('users', function ($query) use ($user) {
             $query->where('user_id', $user->id);
-        })->get();
+        })->with('transactions')->get();
+
+        // Hitung saldo per grup dari koleksi yang sudah di-eager-load
+        $kasBersamaList->each(function ($group) {
+            $group->balance = $group->transactions->where('type', 'income')->sum('amount') -
+                              $group->transactions->where('type', 'outcome')->sum('amount');
+        });
 
         // Ambil riwayat gabungan (Personal + Grup)
         $recentTransactions = Transaction::where(function ($query) use ($user) {
@@ -123,7 +129,7 @@ class TransactionController extends Controller
             'type' => 'required|in:income,outcome',
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
-            'date' => 'required|date',
+            'date' => 'required|date|before_or_equal:today',
         ]);
 
         Transaction::create([
@@ -149,11 +155,19 @@ class TransactionController extends Controller
             abort(403, 'Anda tidak memiliki izin untuk mengedit transaksi ini.');
         }
 
+        // Jika transaksi kelompok, verifikasi user masih menjadi anggota grup
+        if ($transaction->group_id) {
+            $group = Group::find($transaction->group_id);
+            if ($group && !$group->users->contains(auth()->id())) {
+                abort(403, 'Anda bukan lagi anggota kelompok ini.');
+            }
+        }
+
         $request->validate([
             'type' => 'required|in:income,outcome',
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
-            'date' => 'required|date',
+            'date' => 'required|date|before_or_equal:today',
         ]);
 
         $transaction->update([
@@ -177,6 +191,14 @@ class TransactionController extends Controller
             abort(403, 'Anda tidak memiliki izin untuk menghapus transaksi ini.');
         }
 
+        // Jika transaksi kelompok, verifikasi user masih menjadi anggota grup
+        if ($transaction->group_id) {
+            $group = Group::find($transaction->group_id);
+            if ($group && !$group->users->contains(auth()->id())) {
+                abort(403, 'Anda bukan lagi anggota kelompok ini.');
+            }
+        }
+
         $transaction->delete();
 
         return redirect()->back()->with('success', 'Transaksi berhasil dihapus! Saldo otomatis disesuaikan.');
@@ -185,14 +207,25 @@ class TransactionController extends Controller
     /**
      * PROSES EKSPOR EXCEL
      */
-    public function export()
+    public function export(Request $request)
     {
         $user = auth()->user();
 
-        $transactions = $user->transactions()
-            ->whereNull('group_id')
-            ->orderBy('date', 'desc')
-            ->get();
+        $query = $user->transactions()->orderBy('date', 'desc');
+
+        if ($request->filled('group_id')) {
+            $group = Group::findOrFail($request->group_id);
+            if (! $group->users->contains(auth()->id())) {
+                abort(403, 'Anda bukan anggota kelompok ini.');
+            }
+            $query->where('group_id', $request->group_id);
+            $fileName = 'Laporan_Transaksi_Grup_'.$group->code.'_'.date('Ymd_His').'.xlsx';
+        } else {
+            $query->whereNull('group_id');
+            $fileName = 'Laporan_Transaksi_Pribadi_'.date('Ymd_His').'.xlsx';
+        }
+
+        $transactions = $query->get();
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
@@ -217,8 +250,6 @@ class TransactionController extends Controller
         foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-
-        $fileName = 'Laporan_Transaksi_Pribadi_'.date('Ymd_His').'.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="'.$fileName.'"');

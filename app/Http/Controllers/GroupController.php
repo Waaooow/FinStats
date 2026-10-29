@@ -22,7 +22,10 @@ class GroupController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $code = 'KAS-'.strtoupper(Str::random(6));
+        // Generate kode unik, loop sampai tidak tabrakan di database
+        do {
+            $code = 'KAS-'.strtoupper(Str::random(6));
+        } while (Group::where('code', $code)->exists());
 
         $group = Group::create([
             'name' => $request->name,
@@ -57,24 +60,26 @@ class GroupController extends Controller
 
     public function show($id)
     {
-        $group = Group::with('users')->findOrFail($id);
+        // Eager load users + transactions (dengan user relasi) untuk mencegah N+1 query
+        $group = Group::with(['users', 'transactions.user'])->findOrFail($id);
         if (! $group->users->contains(auth()->id())) {
             abort(403, 'Anda bukan anggota kelompok ini.');
         }
 
-        // 1. Hitung Total Dana Masuk Kelompok
-        $totalIncome = $group->transactions()->where('type', 'income')->sum('amount');
+        // 1. Hitung Total Dana Masuk Kelompok (dari koleksi eager-loaded)
+        $totalIncome = $group->transactions->where('type', 'income')->sum('amount');
 
-        // 2. Hitung Total Dana Keluar Kelompok
-        $totalOutcome = $group->transactions()->where('type', 'outcome')->sum('amount');
+        // 2. Hitung Total Dana Keluar Kelompok (dari koleksi eager-loaded)
+        $totalOutcome = $group->transactions->where('type', 'outcome')->sum('amount');
 
         // 3. Saldo Bersih Kas Bersama
         $groupBalance = $totalIncome - $totalOutcome;
 
-        // 4. Hitung rincian saldo per member
+        // 4. Hitung rincian saldo per member (dari koleksi eager-loaded, tidak ada query per member)
         $memberSavings = $group->users->map(function ($user) use ($group) {
-            $userIncome = $group->transactions()->where('user_id', $user->id)->where('type', 'income')->sum('amount');
-            $userOutcome = $group->transactions()->where('user_id', $user->id)->where('type', 'outcome')->sum('amount');
+            $userTx = $group->transactions->where('user_id', $user->id);
+            $userIncome = $userTx->where('type', 'income')->sum('amount');
+            $userOutcome = $userTx->where('type', 'outcome')->sum('amount');
 
             return [
                 'name' => $user->name,
@@ -82,8 +87,10 @@ class GroupController extends Controller
             ];
         })->sortByDesc('total');
 
-        // 5. Riwayat Aktivitas
-        $groupTransactions = $group->transactions()->with('user')->orderBy('date', 'desc')->get();
+        // 5. Riwayat Aktivitas (dari koleksi eager-loaded, urutkan di PHP)
+        $groupTransactions = $group->transactions->sortByDesc(function ($tx) {
+            return \Carbon\Carbon::parse($tx->date)->timestamp . '-' . str_pad((string) $tx->id, 10, '0', STR_PAD_LEFT);
+        })->values();
 
         // Variabel totalIncome & totalOutcome sudah dipassing ke view!
         return view('groups.show', compact('group', 'groupBalance', 'totalIncome', 'totalOutcome', 'memberSavings', 'groupTransactions'));
@@ -91,11 +98,18 @@ class GroupController extends Controller
 
     public function storeTransaction(Request $request, $groupId)
     {
+        $group = Group::findOrFail($groupId);
+
+        // Cek keanggotaan grup sebelum mencatat transaksi
+        if (! $group->users->contains(auth()->id())) {
+            abort(403, 'Anda bukan anggota kelompok ini.');
+        }
+
         $request->validate([
             'type' => 'required|in:income,outcome',
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
-            'date' => 'required|date',
+            'date' => 'required|date|before_or_equal:today',
         ]);
 
         Transaction::create([

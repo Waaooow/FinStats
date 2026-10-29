@@ -11,30 +11,35 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 Route::middleware('guest')->group(function () {
     
-    // Route Register dengan Kurs
+    // Route Register dengan Kurs (cached 1 jam)
     Route::get('register', function () {
-        try {
-            $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
-            $kurs = $response['rates']['IDR'] ?? 16450;
-        } catch (\Exception $e) {
-            $kurs = 16450;
-        }
+        $kurs = Cache::remember('kurs_usd_idr', 3600, function () {
+            try {
+                $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
+                return $response['rates']['IDR'] ?? 16450;
+            } catch (\Exception $e) {
+                return 16450;
+            }
+        });
         return view('auth.register', ['kurs' => $kurs]);
     })->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    // Route Login dengan Kurs
+    // Route Login dengan Kurs (cached 1 jam)
     Route::get('login', function () {
-        try {
-            $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
-            $kurs = $response['rates']['IDR'] ?? 16450;
-        } catch (\Exception $e) {
-            $kurs = 16450;
-        }
+        $kurs = Cache::remember('kurs_usd_idr', 3600, function () {
+            try {
+                $response = Http::timeout(3)->get('https://open.er-api.com/v6/latest/USD')->json();
+                return $response['rates']['IDR'] ?? 16450;
+            } catch (\Exception $e) {
+                return 16450;
+            }
+        });
         return view('auth.login', ['kurs' => $kurs]);
     })->name('login');
 

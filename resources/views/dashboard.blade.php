@@ -86,8 +86,8 @@
                             if (isset($kasBersamaList)) {
                                 foreach ($kasBersamaList as $kas) {
                                     $totalSemuaKasBersama +=
-                                        $kas->transactions()->where('type', 'income')->sum('amount') -
-                                        $kas->transactions()->where('type', 'outcome')->sum('amount');
+                                        $kas->transactions->where('type', 'income')->sum('amount') -
+                                        $kas->transactions->where('type', 'outcome')->sum('amount');
                                 }
                             }
                         @endphp
@@ -211,6 +211,9 @@
                                 @endforelse
                             </tbody>
                         </table>
+
+                        {{ $transactions->links() }}
+
                     </div>
                 </div>
             </div>
