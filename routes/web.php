@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\PocketController;
+use App\Http\Controllers\PocketTransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/join', [GroupController::class, 'join'])->name('join');
         Route::get('/{id}', [GroupController::class, 'show'])->name('show');
         Route::post('/{id}/transaction', [GroupController::class, 'storeTransaction'])->name('transaction.store');
+    });
+
+    // Pocket Tabungan Pribadi
+    Route::prefix('pockets')->name('pockets.')->group(function () {
+        Route::get('/', [PocketController::class, 'index'])->name('index');
+        Route::get('/create', [PocketController::class, 'create'])->name('create');
+        Route::post('/', [PocketController::class, 'store'])->name('store');
+        Route::get('/{pocket}', [PocketController::class, 'show'])->name('show');
+        Route::get('/{pocket}/edit', [PocketController::class, 'edit'])->name('edit');
+        Route::patch('/{pocket}', [PocketController::class, 'update'])->name('update');
+        Route::delete('/{pocket}', [PocketController::class, 'destroy'])->name('destroy');
+
+        // Mutasi pocket (top up, withdraw, transfer)
+        Route::post('/{pocket}/top-up', [PocketTransactionController::class, 'topUp'])->name('topUp');
+        Route::post('/{pocket}/withdraw', [PocketTransactionController::class, 'withdraw'])->name('withdraw');
+        Route::post('/transfer', [PocketTransactionController::class, 'transfer'])->name('transfer');
     });
 });
 

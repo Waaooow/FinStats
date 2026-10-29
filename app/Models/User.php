@@ -63,4 +63,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * =========================================================================
+     * KODE TAMBAHAN: RELASI TABEL POCKET (ONE-TO-MANY)
+     * Menghubungkan user ini ke semua pocket tabungan pribadinya.
+     * =========================================================================
+     */
+    public function pockets()
+    {
+        return $this->hasMany(Pocket::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Total saldo semua pocket milik user.
+     */
+    public function totalPocketBalance()
+    {
+        return $this->pockets->sum('balance');
+    }
 }

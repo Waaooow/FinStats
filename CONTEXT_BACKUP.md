@@ -175,14 +175,51 @@ Catatan: Berkas ini adalah snapshot konteks proyek FinStats untuk dilanjutkan di
 - Remote: `git@github.com:Waaooow/FinStats.git` (SSH)
 - Branch utama: `main` (sudah push commit 127e455)
 - Branch aktif saat ini: `pocket-feature` (dibuat dari `main`, belum di-push)
-- Commit terbaru: `fix: perbaikan hasil audit FinStats (batch 1-5)`
+- Commit terbaru: `docs: update progres dan konteks setelah fix audit + buat branch pocket-feature`
 
-## 7. Langkah Selanjutnya (Next Steps)
+## 7. Fitur Pocket (Sudah Diimplementasi)
 
-1. **Tambah fitur Pocket** pada branch `pocket-feature`: konsep tabungan pribadi (pocket/saku) untuk pengguna, terpisah dari transaksi harian dan tabungan bersama.
-2. **Tambah fitur**: kategori transaksi, budget/target, pagination, export laporan bulanan.
-3. **Tambah test**: FeatureTest untuk transaksi pribadi dan grup.
-4. **Perbarui `.env`**: `APP_URL` sesuai domain produksi.
+### Database
+- Tabel `pockets`: id, user_id, name, target (nullable), balance, timestamps
+- Tabel `pocket_transactions`: id, pocket_id, type (top_up/withdraw/transfer_in/transfer_out), amount, description, transaction_date, related_pocket_id (nullable), related_group_id (nullable), timestamps
+
+### Model
+- `Pocket`: relasi ke User, PocketTransactions; helper `targetProgress()`, `isTargetReached()`
+- `PocketTransaction`: relasi ke Pocket, relatedPocket, relatedGroup; helper `typeLabel()`
+- `User`: relasi `pockets()`, helper `totalPocketBalance()`
+
+### Controller
+- `PocketController`: index, create, store, show, edit, update, destroy
+- `PocketTransactionController`: topUp, withdraw, transfer (antar pocket & ke grup)
+
+### Routes
+- `GET/POST /pockets` — index, store
+- `GET /pockets/create` — create
+- `GET/PATCH/DELETE /pockets/{pocket}` — show, update, destroy
+- `POST /pockets/{pocket}/top-up` — setoran ke pocket
+- `POST /pockets/{pocket}/withdraw` — penarikan dari pocket
+- `POST /pockets/transfer` — transfer antar pocket atau ke tabungan bersama
+
+### Views
+- `resources/views/pockets/index.blade.php` — daftar pocket + total saldo + target progres
+- `resources/views/pockets/create.blade.php` — form buat pocket
+- `resources/views/pockets/show.blade.php` — detail pocket, mutasi, modal top-up/withdraw/transfer
+- `resources/views/pockets/edit.blade.php` — form edit pocket
+- `resources/views/dashboard.blade.php` — ditambahkan section Pocket Tabungan Pribadi + Mutasi Pocket Terbaru
+
+### Requirement Terpenuhi
+1. ✅ Multiple pocket dengan nama bebas ditentukan user
+2. ✅ Target per pocket opsional (tidak wajib), dengan indikator progres
+3. ✅ Transfer uang antar pocket + ke tabungan bersama, dengan mutasi wajib untuk setiap pocket terlibat
+4. ✅ Riwayat per pocket terpisah dari transaksi harian (tabel `pocket_transactions` terpisah dari `transactions`); top_up/withdraw juga dicatat di `transactions` harian
+5. ✅ Transfer dari pocket pribadi ke tabungan bersama (grup); dashboard menampilkan mutasi pribadi dan grup
+
+## 8. Langkah Selanjutnya (Next Steps)
+
+1. **Tambah test** FeatureTest untuk pocket dan pocket_transactions.
+2. **Tambah fitur**: kategori transaksi, budget/target harian/bulanan, export laporan bulanan.
+3. **Perbarui `.env`**: `APP_URL` sesuai domain produksi.
+4. **Push branch `pocket-feature`** ke origin saat fitur selesai.
 
 ---
 

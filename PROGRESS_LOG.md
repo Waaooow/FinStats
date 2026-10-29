@@ -38,6 +38,21 @@ Catatan setiap perkembangan, perubahan, dan fitur baru pada proyek FinStats.
 - [FIX] `routes/auth.php` — cache kurs USD→IDR via `Cache::remember('kurs_usd_idr', 3600)` (register & login)
 - [FIX] Soft deletes pada tabel `transactions` (migration baru + `SoftDeletes` trait pada model Transaction)
 
+## 2026-10-29 | [FEATURE] | Implementasi Fitur Pocket (Batch 1)
+- Migration: tabel `pockets` (user_id, name, target nullable, balance, timestamps)
+- Migration: tabel `pocket_transactions` (pocket_id, type enum top_up/withdraw/transfer_in/transfer_out, amount, description, transaction_date, related_pocket_id nullable, related_group_id nullable)
+- Model: `Pocket` (relasi user, transactions; helper targetProgress(), isTargetReached())
+- Model: `PocketTransaction` (relasi pocket, relatedPocket, relatedGroup; helper typeLabel())
+- Model: `User` — tambah relasi `pockets()` dan helper `totalPocketBalance()`
+- Controller: `PocketController` (index, create, store, show, edit, update, destroy)
+- Controller: `PocketTransactionController` (topUp, withdraw, transfer antar pocket & ke grup)
+- Routes: `/pockets` (index, create, store, show, edit, update, destroy), `/pockets/{pocket}/top-up`, `/pockets/{pocket}/withdraw`, `/pockets/transfer`
+- Views: pockets/index, create, show, edit (dengan modal top-up, withdraw, transfer)
+- Dashboard: ditambahkan section Pocket Tabungan Pribadi + Mutasi Pocket Terbaru
+- Requirement 4: pocket transaksi terpisah dari transaksi harian; top_up/withdraw juga dicatat di tabel transactions
+- Requirement 5: transfer dari pocket pribadi ke tabungan bersama (grup) supported
+- Semua 25 test lulus, tidak ada regresi.
+
 ## 2026-10-29 | [GIT] | Commit, push, dan buat branch pocket-feature
 - Commit semua perbaikan audit ke branch `main` (commit 127e455, 10 file berubah)
 - Push ke `origin/main` (remote diubah dari HTTPS ke SSH: git@github.com:Waaooow/FinStats.git)
@@ -45,6 +60,6 @@ Catatan setiap perkembangan, perubahan, dan fitur baru pada proyek FinStats.
 - WORKING DIRECTORY sekarang berada di branch `pocket-feature`
 
 ## 2026-10-29 | [BACKUP] | CONTEXT_BACKUP.md FinStats diperbarui
-- Semua perubahan bug fix, performa, dan status git tercatat ke CONTEXT_BACKUP.md.
+- Semua perubahan bug fix, performa, fitur pocket, dan status git tercatat ke CONTEXT_BACKUP.md.
 
 ---

@@ -219,6 +219,96 @@
             </div>
         </div>
 
+        <!-- Pocket Section (Requirement 5) -->
+        @if ($userPockets && $userPockets->count() > 0)
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 p-5 sm:p-6">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-wallet text-emerald-500 text-sm"></i>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Pocket Tabungan Pribadi</h3>
+                    </div>
+                    <a href="{{ route('pockets.index') }}"
+                        class="text-[10px] text-emerald-600 dark:text-emerald-500 font-bold hover:text-emerald-500 dark:hover:text-emerald-400 transition">
+                        Kelola Semua Pocket <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 sm:p-6">
+                    @foreach($userPockets as $pocket)
+                        <div class="bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $pocket->name }}</h4>
+                                    @if ($pocket->target)
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">
+                                            Target: Rp {{ number_format($pocket->target, 0, ',', '.') }}
+                                        </p>
+                                    @endif
+                                </div>
+                                <span class="text-xs font-bold
+                                    @if ($pocket->isTargetReached()) text-emerald-600 dark:text-emerald-400
+                                    @else text-slate-500 dark:text-slate-400 @endif">
+                                    Rp {{ number_format($pocket->balance, 0, ',', '.') }}
+                                </span>
+                            </div>
+                            @if ($pocket->target)
+                                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 mb-2">
+                                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ min(100, ($pocket->balance / $pocket->target) * 100) }}%"></div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 dark:text-slate-500">
+                                    {{ round(min(100, ($pocket->balance / $pocket->target) * 100), 1) }}% tercapai
+                                </p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Recent Pocket Mutations -->
+                @if ($recentPocketTransactions && $recentPocketTransactions->count() > 0)
+                    <div class="border-t border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center justify-between p-5 sm:p-6">
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Mutasi Pocket Terbaru</h4>
+                            <a href="{{ route('pockets.index') }}"
+                                class="text-[10px] text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400">
+                                Lihat Semua
+                            </a>
+                        </div>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
+                            @foreach($recentPocketTransactions as $tx)
+                                <div class="p-5 sm:p-6 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold
+                                            @switch($tx->type)
+                                                @case('top_up') bg-emerald-100 text-emerald-700 @break
+                                                @case('withdraw') bg-rose-100 text-rose-700 @break
+                                                @case('transfer_in') bg-blue-100 text-blue-700 @break
+                                                @case('transfer_out') bg-orange-100 text-orange-700 @break
+                                            @endswitch
+                                        ">
+                                            {{ $tx->typeLabel() }}
+                                        </span>
+                                        <div>
+                                            <p class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ $tx->description }}</p>
+                                            <p class="text-[10px] text-slate-500 dark:text-slate-400">
+                                                {{ \Carbon\Carbon::parse($tx->transaction_date)->format('d M Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold
+                                            {{ $tx->type === 'top_up' || $tx->type === 'transfer_in' ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500' }}">
+                                            {{ $tx->type === 'top_up' || $tx->type === 'transfer_in' ? '+' : '-' }}
+                                            Rp {{ number_format($tx->amount, 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <div x-show="open"
             class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/40 dark:bg-slate-950/80 backdrop-blur-sm"
             style="display: none;" x-transition>

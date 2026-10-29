@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\Pocket;
+use App\Models\PocketTransaction;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -108,6 +110,19 @@ class TransactionController extends Controller
         }
         // =========================================================================
 
+        // =========================================================================
+        // DATA POCKET UNTUK DASHBOARD (Requirement 5: mutasi pribadi & grup)
+        // =========================================================================
+        $userPockets = $user->pockets()->with('transactions')->get();
+        $pocketBalance = $userPockets->sum('balance');
+
+        // Mutasi pocket terbaru (untuk ditampilkan di dashboard)
+        $recentPocketTransactions = PocketTransaction::whereIn('pocket_id', $userPockets->pluck('id'))
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->take(7)
+            ->get();
+
         return view('dashboard', compact(
             'transactions',
             'totalPemasukan',
@@ -116,7 +131,10 @@ class TransactionController extends Controller
             'chartLabels',
             'chartData',
             'kasBersamaList',
-            'recentTransactions'
+            'recentTransactions',
+            'userPockets',
+            'pocketBalance',
+            'recentPocketTransactions'
         ));
     }
 
