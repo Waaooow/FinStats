@@ -27,6 +27,11 @@
                         class="inline-flex items-center px-1 pt-1 border-b-2 text-xs font-bold transition duration-150 ease-in-out {{ request()->routeIs('groups.*') ? 'border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-800' }}">
                         <i class="fa-solid fa-users mr-1.5 text-[11px]"></i> Tabungan Bersama
                     </a>
+
+                    <a href="{{ route('pockets.index') }}"
+                        class="inline-flex items-center px-1 pt-1 border-b-2 text-xs font-bold transition duration-150 ease-in-out {{ request()->routeIs('pockets.*') ? 'border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-800' }}">
+                        <i class="fa-solid fa-wallet mr-1.5 text-[11px]"></i> Pocket
+                    </a>
                 </div>
             </div>
 
@@ -121,6 +126,11 @@
             <a href="{{ route('groups.index') }}"
                 class="block w-full pl-3 pr-4 py-2 border-l-4 text-left text-xs font-bold transition duration-150 ease-in-out flex items-center gap-2 {{ request()->routeIs('groups.*') ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600' }}">
                 <i class="fa-solid fa-users text-sm"></i> Tabungan Bersama
+            </a>
+
+            <a href="{{ route('pockets.index') }}"
+                class="block w-full pl-3 pr-4 py-2 border-l-4 text-left text-xs font-bold transition duration-150 ease-in-out flex items-center gap-2 {{ request()->routeIs('pockets.*') ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600' }}">
+                <i class="fa-solid fa-wallet text-sm"></i> Pocket
             </a>
         </div>
 

@@ -44,6 +44,12 @@ Catatan setiap perkembangan, perubahan, dan fitur baru pada proyek FinStats.
 - Cursor pointer + hover effect ditambahkan pada card pocket untuk indikator interaktif
 - Link "Kelola Semua Pocket" tetap tersedia sebagai navigasi tambahan
 
+## 2026-10-31 | [UI/UX] | Tambah menu Pocket di Navbar
+- Menu "Pocket" ditambahkan ke navbar desktop (samping Tabungan Bersama) dengan ikon dompet
+- Menu "Pocket" ditambahkan ke mobile nav drawer (samping Tabungan Bersama)
+- Aktif state (border-emerald-500) otomatis saat di halaman pockets/*
+- Navigasi ke pockets/index lebih cepat dari mana saja
+
 ## 2026-10-29 | [FEATURE] | Implementasi Fitur Pocket (Batch 1)
 - Migration: tabel `pockets` (user_id, name, target nullable, balance, timestamps)
 - Migration: tabel `pocket_transactions` (pocket_id, type enum top_up/withdraw/transfer_in/transfer_out, amount, description, transaction_date, related_pocket_id nullable, related_group_id nullable)
